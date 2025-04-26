@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,9 +19,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -30,6 +31,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
@@ -53,10 +55,11 @@ import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.myapplication.ui.theme.MyApplicationTheme
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.graphics.Color
-
-
-
+import com.airbnb.lottie.compose.rememberLottieAnimatable
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -81,12 +84,23 @@ fun MyCalciUI() {
     var expanded by remember { mutableStateOf(false) }
     var selectedOption by remember { mutableStateOf("Operators") }
     val options = listOf<String>("Addition", "Subtraction", "Multiplication", "Division")
+
+    // Remembering the composition of the Lottie animation
     val composition by rememberLottieComposition(LottieCompositionSpec.Asset("animation.json"))
-    val progress by animateLottieCompositionAsState(composition)
-    LottieAnimation(
-        composition,
-        iterations = LottieConstants.IterateForever
-    )
+    val lottieAnimatable = rememberLottieAnimatable()
+    val coroutineScope = rememberCoroutineScope()
+
+    // Animate on each click event
+    fun triggerAnimation() {
+        coroutineScope.launch {
+            // Animate once each time the user clicks
+            lottieAnimatable.animate(
+                composition,
+                iterations = 1,  // Only animate once on click
+                initialProgress = 0f
+            )
+        }
+    }
 
     Scaffold { paddingValues ->
 
@@ -94,10 +108,8 @@ fun MyCalciUI() {
             modifier = Modifier
                 .fillMaxSize()
                 .background(color = Color(212, 76, 76))
-//                .padding(paddingValues)
                 .systemBarsPadding()
-        )
-        {
+        ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -106,7 +118,6 @@ fun MyCalciUI() {
                     .padding(horizontal = 16.dp, vertical = 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
-
             ) {
 
                 Text(
@@ -115,44 +126,37 @@ fun MyCalciUI() {
                     modifier = Modifier.padding(16.dp)
                 )
 
-
                 Card(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-//                    .wrapContentHeight()
+                    modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(20.dp),
                     elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
                     colors = CardDefaults.cardColors(containerColor = Color(252, 186, 3))
-
                 ) {
-
                     Column(
                         modifier = Modifier
                             .padding(16.dp)
                             .fillMaxWidth(),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-
                         LottieAnimation(
                             composition = composition,
-                            progress = { progress },
+                            progress = { lottieAnimatable.progress },
                             modifier = Modifier
-//                            .height(170.dp)
-                                .fillMaxWidth()
-                                .padding(top = 24.dp)
                                 .size(300.dp)
+                                .clickable {
+                                    // Trigger animation on each click
+                                    triggerAnimation()
+                                }
                         )
 
                         Spacer(modifier = Modifier.height(12.dp))
 
                         Row(
-
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(top = 50.dp),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        )
-                        {
+                        ) {
 
                             OutlinedTextField(
                                 value = firstNum,
@@ -189,14 +193,12 @@ fun MyCalciUI() {
                                     unfocusedPlaceholderColor = Color.Gray
                                 )
                             )
-
                         }
 
                         ExposedDropdownMenuBox(
                             expanded = expanded,
                             onExpandedChange = { expanded = !expanded }
-                        )
-                        {
+                        ) {
 
                             TextField(
                                 value = selectedOption,
@@ -206,7 +208,10 @@ fun MyCalciUI() {
                                     ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
                                 },
                                 modifier = Modifier
-                                    .menuAnchor()
+                                    .menuAnchor(
+                                        type = MenuAnchorType.PrimaryNotEditable,
+                                        enabled = true
+                                    )
                                     .fillMaxWidth()
                                     .padding(top = 20.dp)
                             )
@@ -214,25 +219,21 @@ fun MyCalciUI() {
                             ExposedDropdownMenu(
                                 expanded = expanded,
                                 onDismissRequest = { expanded = false }
-                            )
-                            {
+                            ) {
                                 options.forEach { selectionOption ->
 
                                     DropdownMenuItem(
-                                        text = { Text(selectionOption)},
+                                        text = { Text(selectionOption) },
                                         onClick = {
                                             selectedOption = selectionOption
                                             expanded = false
                                         }
                                     )
-
                                 }
                             }
                         }
-
                     }
                 }
-
 
                 Spacer(modifier = Modifier.height(24.dp))
 
@@ -246,8 +247,7 @@ fun MyCalciUI() {
                         .padding(vertical = 16.dp)
                         .fillMaxWidth(0.5f)
                         .align(Alignment.CenterHorizontally)
-                )
-                {
+                ) {
                     Text("Calculate", color = Color.White, fontSize = 20.sp)
                 }
 
@@ -263,50 +263,36 @@ fun MyCalciUI() {
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Medium
                 )
-
             }
-
         }
     }
 }
 
-fun calculateResult(firstNumber: String, secondNumber: String, options: String): String{
+fun calculateResult(firstNumber: String, secondNumber: String, options: String): String {
 
     val num1 = firstNumber.toDoubleOrNull()
     val num2 = secondNumber.toDoubleOrNull()
 
-    return if (num1 != null && num2 != null){
+    return if (num1 != null && num2 != null) {
 
-        when(options){
+        when (options) {
 
             "Addition" -> (num1 + num2).toString()
             "Subtraction" -> (num1 - num2).toString()
             "Multiplication" -> (num1 * num2).toString()
-            "Division" -> if(num2 != 0.0) (num1/num2).toString() else "Cannot divide by zero"
-            else -> "invalid operation"
+            "Division" -> if (num2 != 0.0) (num1 / num2).toString() else "Cannot divide by zero"
+            else -> "Invalid operation"
         }
-    } else{
+    } else {
         "Invalid Input"
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-fun CalciPreview(){
+fun CalciPreview() {
 
     MyApplicationTheme {
         MyCalciUI()
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
