@@ -12,11 +12,9 @@ Perform basic arithmetic operations with a clean and colorful UI.
 
 ---
 
-## 📸 Screenshots
-
-| Home Screen |
-|:-----------:|
-| ![Home Screen](Screenshot_20250426_152054.png) |
+<p align="center">
+  <img src="Screenshot_20250426_152054.png" alt="Home Screen" width="200"/>
+</p>
 
 ---
 
