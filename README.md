@@ -9,6 +9,7 @@ Perform basic arithmetic operations with a clean and colorful UI.
 - Beautiful UI using Jetpack Compose
 - Dynamic result calculation
 - Responsive design for different screen sizes
+- also has a on touch animate feature which makes it look good
 
 ---
 
